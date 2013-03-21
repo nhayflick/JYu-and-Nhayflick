@@ -6,8 +6,9 @@
 #clean directions using nokogiri and present to user.
 require 'json'
 require 'rest-client'
+require 'nokogiri'
 
-def ice_cream_finder
+def ice_cream_finder # It works, but needs refactoring
   puts "Enter your current address."
   address = gets.chomp
   address_query = address_to_request(address)
@@ -19,12 +20,30 @@ def ice_cream_finder
   places_results = RestClient.get(get_places)
   places_hash = JSON.parse(places_results)
   display_shop_list(places_hash)
-  true
+  selection_index = select_place
+  end_coords = lat_long(places_hash, selection_index)
+  get_directions = get_directions(coordinates, end_coords)
+  directions_results = RestClient.get(get_directions)
+  directions_hash = JSON.parse(directions_results)
+  directions_to_ruby(directions_hash)
 end
 
-def lat_long(geo_hash)
-  lat = geo_hash["results"][0]["geometry"]["location"]["lat"]
-  long = geo_hash["results"][0]["geometry"]["location"]["lng"]
+def select_place
+  puts "\nEnter selection number to find directions."
+  selection_index = gets.chomp.to_i - 1
+end
+
+def get_directions(start_coords, end_coords)
+  directions_prefix = "https://maps.googleapis.com/maps/api/directions/json?"
+  origin = "origin=#{start_coords}"
+  destination = "destination=#{end_coords}"
+  sensor = "sensor=false"
+  directions_URL = "#{directions_prefix}#{origin}&#{destination}&#{sensor}"
+end
+
+def lat_long(geo_hash, selection_index = 0)
+  lat = geo_hash["results"][selection_index]["geometry"]["location"]["lat"]
+  long = geo_hash["results"][selection_index]["geometry"]["location"]["lng"]
   coordinates = "#{lat},#{long}"
 end
 
@@ -59,4 +78,14 @@ def display_shop_list(places_hash)
   shops_array.each_with_index do |shop_hash, i|
     puts "#{i + 1}. #{shop_hash["name"]} Rating: #{shop_hash["rating"]}\n#{shop_hash["vicinity"]}"
   end
+end
+
+def directions_to_ruby(directions_hash)
+  directions_hash["routes"][0]["legs"][0]["steps"].each_with_index do |step, i|
+    a_single_step = Nokogiri::HTML(step["html_instructions"])
+    a_single_step = a_single_step.text
+    a_single_step.gsub!("Destination","\nDestination")
+    puts "#{i + 1}. #{a_single_step}"
+  end
+  puts "Enjoy your ice cream!"
 end
