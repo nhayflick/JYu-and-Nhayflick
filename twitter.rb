@@ -29,15 +29,22 @@ end
 
 class User
   attr_reader :id, :screen_name
+
   def initialize(screen_name)
-    @screen_name
+    @screen_name = screen_name
     @statuses = []
   end
 
   def statuses
-    @statuses.each do |status|
-      puts status.text
-    end
+    user_timeline_URL = Addressable::URI.new(
+      :scheme => "https",
+      :host => "api.twitter.com",
+      :path => "1.1/statuses/user_timeline.json",
+      :query_values => {:screen_name => @screen_name}
+    ).to_s
+    statuses_return = EndUser.access_token.get(user_timeline_URL).body
+    puts statuses_return.class
+    puts statuses_return[0]
   end
 end
 
@@ -88,6 +95,10 @@ class EndUser < User
     :oauth_verifier => oauth_verifier)
   end
 
+  def self.access_token
+    @@access_token
+  end
+
   def save_login(token_file)
     if File.exist?(token_file)
       File.open(token_file) { |f| YAML.load(f)}
@@ -97,17 +108,6 @@ class EndUser < User
 
       @@access_token
     end
-  end
-
-  def user_timeline
-    user_timeline_URL = Addressable::URI.new(
-      :scheme => "https",
-      :host => "api.twitter.com",
-      :path => "1.1/statuses/user_timeline.json",
-      :query_values => {"screen_name" => self.screen_name}
-    ).to_s
-    puts user_timeline_URL
-    @@access_token.get(user_timeline_URL).body
   end
 
   def get_user_id(screen_name)
@@ -125,5 +125,7 @@ class EndUser < User
   def self.current_user
     @@current_user
   end
+
+
 end
 
