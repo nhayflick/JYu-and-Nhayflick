@@ -7,6 +7,9 @@
 #Hint: you will eventually need to set your app to ask to both read and post on your users' behalf. This is a key benefit of OAuth: a gradation of permission levels.
 #You will want to use the OAuth gem.
 
+# REV: Maybe wrap everything up in a TwitterAPI class?
+# REV: Looks good though.
+
 require 'addressable/uri'
 require 'rest-client'
 require 'oauth'

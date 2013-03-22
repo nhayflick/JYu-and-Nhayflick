@@ -8,6 +8,11 @@ require 'json'
 require 'rest-client'
 require 'nokogiri'
 
+
+
+# REV: Nice linear flow in ice_cream_finder
+# REV: Good use of helper functions
+
 def ice_cream_finder # It works, but needs refactoring
   puts "Enter your current address."
   address = gets.chomp
